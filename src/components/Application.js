@@ -7,7 +7,7 @@ import "components/Application.scss";
 //imports needed components
 import DayList from "components/DayList";
 import Appointment from "components/Appointment";
-import { getAppointmentsForDay } from "helpers/selectors";
+import { getAppointmentsForDay, getInterview } from "helpers/selectors";
 
 export default function Application(props) {
   //Hook to store the state and update it
@@ -40,6 +40,7 @@ export default function Application(props) {
   //Function to display all the appointments for the selected day
   const appointmentsList = getAppointmentsForDay(state, state.day).map(
     (appointment) => {
+      const interview = getInterview(state, appointment.interview);
       return (
         <Appointment
           key={appointment.id}

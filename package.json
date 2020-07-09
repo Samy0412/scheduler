@@ -9,8 +9,7 @@
     "normalize.css": "^8.0.1",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
-    "react-scripts": "^3.4.1",
-    "webpack": "^4.42.0"
+    "react-scripts": "^3.0.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -41,8 +40,10 @@
     "@storybook/react": "^5.0.10",
     "@testing-library/jest-dom": "^4.0.0",
     "@testing-library/react": "^8.0.7",
+    "@testing-library/react-hooks": "^3.3.0",
     "babel-loader": "^8.1.0",
-    "node-sass": "^4.12"
+    "node-sass": "^4.12",
+    "react-test-renderer": "^16.13.1"
   },
   "jest": {
     "watchPathIgnorePatterns": [
