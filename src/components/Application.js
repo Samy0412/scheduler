@@ -7,7 +7,11 @@ import "components/Application.scss";
 //imports needed components
 import DayList from "components/DayList";
 import Appointment from "components/Appointment";
-import { getAppointmentsForDay, getInterview } from "helpers/selectors";
+import {
+  getAppointmentsForDay,
+  getInterview,
+  getInterviewersForDay,
+} from "helpers/selectors";
 
 export default function Application(props) {
   //Hook to store the state and update it
@@ -17,6 +21,35 @@ export default function Application(props) {
     appointments: {},
     interviewers: {},
   });
+
+  function bookInterview(id, interview) {
+    const appointment = {
+      ...state.appointments[id],
+      interview: { ...interview },
+    };
+    const appointments = {
+      ...state.appointments,
+      [id]: appointment,
+    };
+
+    return axios
+      .put(`/api/appointments/${id}`, appointment)
+      .then(() => setState({ ...state, appointments }));
+  }
+
+  function deleteInterview(id) {
+    const appointment = {
+      ...state.appointments[id],
+      interview: null,
+    };
+    const appointments = {
+      ...state.appointments,
+      [id]: appointment,
+    };
+    return axios
+      .delete(`/api/appointments/${id}`, appointment)
+      .then(() => setState({ ...state, appointments }));
+  }
   //Function to update the state of the day
   const setDay = (day) => setState({ ...state, day });
   //Hook enclosing the API requests to be called after painting the DOM
@@ -26,7 +59,6 @@ export default function Application(props) {
       axios.get(`/api/appointments`),
       axios.get(`/api/interviewers`),
     ]).then((all) => {
-      //console.log("interviewers:", all[2].data);
       //Updating the state of of the days, appointments and interviewers
       setState((prev) => ({
         //...prev" makes sure it it the current version og the state that is copied, not the version of the state at the time of the call
@@ -37,16 +69,25 @@ export default function Application(props) {
       }));
     });
   }, []);
-  //Function to display all the appointments for the selected day
+
+  //Displays all the interviewers for the selected days
+  const interviewers = getInterviewersForDay(state, state.day);
+
+  //Displays all the appointments for the selected day
   const appointmentsList = getAppointmentsForDay(state, state.day).map(
     (appointment) => {
+      //Adds the interviewer data to the interviewObject
       const interview = getInterview(state, appointment.interview);
+      console.log("interview:", interview);
       return (
         <Appointment
           key={appointment.id}
           id={appointment.id}
           time={appointment.time}
           interview={interview}
+          interviewers={interviewers}
+          bookInterview={bookInterview}
+          deleteInterview={deleteInterview}
         />
       );
     }
