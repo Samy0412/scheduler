@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 //Axios allows to make server resquests like $Ajax in Jquery
 import axios from "axios";
-//import { getAppointmentsForDay } from "helpers/selectors";
+import { getAppointmentsForDay } from "helpers/selectors";
 
 export default function useApplicationData() {
   //Hook to store the state and update it
@@ -12,15 +12,35 @@ export default function useApplicationData() {
     interviewers: {},
   });
 
-  const spotsRemaining = (id, increaseBy) => {
-    for (let day of state.days) {
-      if (day.appointments.includes(id)) {
-        day.spots += increaseBy;
+  function getDayIndex() {
+    const dayIndex = state.days.findIndex(
+      (element) => element.name === state.day
+    );
+    return dayIndex;
+  }
+
+  function getRemainingSpots() {
+    let spotsRemaining = 0;
+    getAppointmentsForDay(state, state.day).forEach((appointment) => {
+      if (!appointment.interview) {
+        spotsRemaining++;
       }
-    }
-  };
+    });
+    return spotsRemaining;
+  }
 
   function bookInterview(id, interview) {
+    const dayIndex = getDayIndex();
+    const spotsRemaining = getRemainingSpots() - 1;
+
+    const day = {
+      ...state.days[dayIndex],
+      spots: spotsRemaining,
+    };
+    const days = {
+      ...state.days,
+      [dayIndex]: day,
+    };
     const appointment = {
       ...state.appointments[id],
       interview: { ...interview },
@@ -30,13 +50,26 @@ export default function useApplicationData() {
       [id]: appointment,
     };
 
-    return axios.put(`/api/appointments/${id}`, appointment).then(() => {
-      spotsRemaining(id, -1);
-      setState({ ...state, appointments });
-    });
+    return axios
+      .put(`/api/appointments/${id}`, appointments[id])
+      .then(() => {
+        setState({ ...state, appointments, days });
+      })
+      .catch((err) => console.log(err));
   }
 
   function deleteInterview(id) {
+    const dayIndex = getDayIndex();
+    const spotsRemaining = getRemainingSpots() + 1;
+
+    const day = {
+      ...state.days[dayIndex],
+      spots: spotsRemaining,
+    };
+    const days = {
+      ...state.days,
+      [dayIndex]: day,
+    };
     const appointment = {
       ...state.appointments[id],
       interview: null,
@@ -45,11 +78,14 @@ export default function useApplicationData() {
       ...state.appointments,
       [id]: appointment,
     };
-
-    return axios.delete(`/api/appointments/${id}`, appointment).then(() => {
-      spotsRemaining(id, +1);
-      setState({ ...state, appointments });
-    });
+    return Promise.all([
+      axios.delete(`/api/appointments/${id}`, appointment[id]),
+      axios.put(`/api/days`, days),
+    ])
+      .then((all) => {
+        setState({ ...state, appointments, days });
+      })
+      .catch((err) => console.log(err));
   }
 
   //Function to update the state of the day

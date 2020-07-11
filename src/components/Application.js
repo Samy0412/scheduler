@@ -28,7 +28,7 @@ export default function Application(props) {
     (appointment) => {
       //Adds the interviewer data to the interviewObject
       const interview = getInterview(state, appointment.interview);
-      console.log("interview:", interview);
+
       return (
         <Appointment
           key={appointment.id}
