@@ -42,6 +42,7 @@
     "@testing-library/react": "^8.0.7",
     "@testing-library/react-hooks": "^3.3.0",
     "babel-loader": "^8.1.0",
+    "eslint": "^7.4.0",
     "node-sass": "^4.12",
     "react-test-renderer": "^16.13.1"
   },
