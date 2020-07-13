@@ -10,16 +10,12 @@ export default function DayListItem(props) {
   });
 
   const formatSpots = () => {
-    switch (props.spots) {
-      case 0:
-        return "no spots";
-        break;
-      case 1:
-        return "1 spot";
-        break;
-      default:
-        return `${props.spots} spots`;
+    if (props.spots === 0) {
+      return "no spots";
+    } else if (props.spots === 1) {
+      return "1 spot";
     }
+    return `${props.spots} spots`;
   };
   return (
     <li className={dayClass} onClick={props.setDay}>
