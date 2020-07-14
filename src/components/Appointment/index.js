@@ -50,7 +50,7 @@ export default function Appointment(props) {
     transition(CREATE);
   }
   return (
-    <article className="appointment">
+    <article data-testid="appointment" className="appointment">
       <Header time={props.time} />
       {mode === SHOW && (
         <Show

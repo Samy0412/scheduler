@@ -31,7 +31,9 @@ export default function useApplicationData() {
     };
     spotsRemaining(id, -1);
 
-    return axios.put(`/api/appointments/${id}`, appointment).then(() => {
+    return Promise.resolve(
+      axios.put(`/api/appointments/${id}`, appointment)
+    ).then(() => {
       setState({ ...state, appointments });
     });
   }
@@ -47,7 +49,9 @@ export default function useApplicationData() {
     };
     spotsRemaining(id, +1);
 
-    return axios.delete(`/api/appointments/${id}`, appointment).then(() => {
+    return Promise.resolve(
+      axios.delete(`/api/appointments/${id}`, appointment)
+    ).then(() => {
       setState({ ...state, appointments });
     });
   }
