@@ -24,13 +24,17 @@ export default function Appointment(props) {
   );
 
   function save(name, interviewer) {
+    let isEdit = false;
+    if (props.interview) {
+      isEdit = true;
+    }
     const interview = {
       student: name,
       interviewer,
     };
     transition(SAVING);
     props
-      .bookInterview(props.id, interview)
+      .bookInterview(props.id, interview, isEdit)
       .then(() => transition(SHOW))
       .catch((error) => transition(ERROR_SAVE, true));
   }

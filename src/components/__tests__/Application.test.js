@@ -12,7 +12,11 @@ import {
   getByPlaceholderText,
   waitForElementToBeRemoved,
   queryByText,
+  getByDisplayValue,
+  act,
 } from "@testing-library/react";
+
+import axios from "axios";
 
 import Application from "components/Application";
 
@@ -29,45 +33,207 @@ describe("Application", () => {
     expect(getByText("Leopold Silvers")).toBeInTheDocument();
   });
 
-  it("loads data, books an interview and reduces the spots remaining for the first day by 1", async () => {
+  it("loads data, edits an interview and keeps the spots remaining for Monday the same", async () => {
+    // 1. Render the Application.
     const { container, debug } = render(<Application />);
-    //Makes sure the page is loaded
+
+    // 2. Wait until the text "Archie Cohen" is displayed.
     await waitForElement(() => getByText(container, "Archie Cohen"));
 
-    //Defines the container as the <article> element that contains each appointment
-    const appointments = getAllByTestId(container, "appointment");
-    //Defines the first appointment on monday(12pm in axios.js)that is empty to add a new one
-    const appointment = appointments[0];
+    // 3. Click the "Edit" button on the existing interview.
+    const appointment = getAllByTestId(
+      container,
+      "appointment"
+    ).find((appointment) => queryByText(appointment, "Archie Cohen"));
 
-    //Simulates the user clicking on the Add button
-    fireEvent.click(getByAltText(appointment, "Add"));
+    fireEvent.click(getByAltText(appointment, "Edit"));
 
-    //Simulates the user entering its name in the imput field
+    // 4. Check that the Form is displayed, with the student name in the input field."
+    expect(getByDisplayValue(appointment, "Archie Cohen")).toBeInTheDocument();
+
+    // 5. Enter the name "Lydia Miller-Jones" into the input with the placeholder "Enter Student Name".
     fireEvent.change(getByPlaceholderText(appointment, /enter student name/i), {
       target: { value: "Lydia Miller-Jones" },
     });
 
-    //Simulates the user choosing an interviewer
-    fireEvent.click(getByAltText(appointment, "Sylvia Palmer"));
-
-    //Simulates the user cliking on the save button
+    // 6. Click the "Save" button on that same appointment.
     fireEvent.click(getByText(appointment, "Save"));
 
-    //Expects to see "Saving" after clicking
+    // 7. Check that the element with the text "Saving" is displayed.
     expect(getByText(appointment, /Saving.../i)).toBeInTheDocument();
 
-    //Waits for the "Saving" animation to disappear
+    // 8. Wait until the element with the text "Lydia Miller-Jones" is displayed.
     await waitForElementToBeRemoved(() => getByText(appointment, /Saving.../i));
-
-    //Expects to see the name of the student for the corresponding appointment
     expect(getByText(appointment, "Lydia Miller-Jones")).toBeInTheDocument();
 
-    //Defines the container as the <li> element containing the days
+    // 9. Check that the DayListItem with the text "Monday" also has the text "1 spot remaining".
     const days = getAllByTestId(container, "day");
-    //Looks for the day containing "Monday"
     const monday = days.find((day) => queryByText(day, "Monday"));
+    expect(getByText(monday, "1 spot remaining")).toBeInTheDocument();
+  });
 
-    //Expects to see "no spots reamining" for monday
+  it("loads data, books an interview and reduces the spots remaining for Monday by 1", async () => {
+    // 1. Render the Application.
+    const { container } = render(<Application />);
+
+    // 2. Wait until the text "Archie Cohen" is displayed.
+    await waitForElement(() => getByText(container, "Archie Cohen"));
+
+    // 3. Click the "Add" button on the first empty appointment.
+    const appointments = getAllByTestId(container, "appointment");
+    const appointment = appointments[0];
+    fireEvent.click(getByAltText(appointment, "Add"));
+
+    // 4. Enter the name "Lydia Miller-Jones" into the input with the placeholder "Enter Student Name".
+    fireEvent.change(getByPlaceholderText(appointment, /enter student name/i), {
+      target: { value: "Lydia Miller-Jones" },
+    });
+
+    // 5. Click the first interviewer in the list.
+    fireEvent.click(getByAltText(appointment, "Sylvia Palmer"));
+
+    // 6. Click the "Save" button on that same appointment.
+    fireEvent.click(getByText(appointment, "Save"));
+
+    // 7. Check that the element with the text "Saving" is displayed.
+    expect(getByText(appointment, /Saving.../i)).toBeInTheDocument();
+
+    // 8. Wait until the element with the text "Lydia Miller-Jones" is displayed.
+    await waitForElementToBeRemoved(() => getByText(appointment, /Saving.../i));
+    expect(getByText(appointment, "Lydia Miller-Jones")).toBeInTheDocument();
+
+    // 9. Check that the DayListItem with the text "Monday" also has the text "no spots remaining".
+    const days = getAllByTestId(container, "day");
+    const monday = days.find((day) => queryByText(day, "Monday"));
     expect(getByText(monday, "no spots remaining")).toBeInTheDocument();
+  });
+
+  it("loads data, cancels an interview and increases the spots remaining for Monday by 1", async () => {
+    // 1. Render the Application.
+    const { container, debug } = render(<Application />);
+    act(async () => {
+      // 2. Wait until the text "Archie Cohen" is displayed.
+      await waitForElement(() => getByText(container, "Archie Cohen"));
+
+      // 3. Click the "Trash" button on the existing interview.
+      const appointment = getAllByTestId(
+        container,
+        "appointment"
+      ).find((appointment) => queryByText(appointment, "Archie Cohen"));
+
+      fireEvent.click(getByAltText(appointment, "Delete"));
+
+      // 4. Check that the confirm message is displayed."
+      expect(
+        getByText(appointment, /Are you sure you would like to delete?/i)
+      ).toBeInTheDocument();
+
+      // 5. Click the confirm button.
+      fireEvent.click(getByText(appointment, "Confirm"));
+
+      // 6. Check that the element with the text "Deleting" is displayed.
+      expect(getByText(appointment, /Deleting.../i)).toBeInTheDocument();
+
+      // 7. Wait until the element with the element with the "Add" button is displayed.
+      await waitForElement(() => getByAltText(appointment, "Add"));
+
+      // 8. Check that the DayListItem with the text "Monday" also has the text "2 spots remaining".
+      const days = getAllByTestId(container, "day");
+      const monday = days.find((day) => queryByText(day, "Monday"));
+
+      expect(getByText(monday, "2 spots remaining")).toBeInTheDocument();
+    });
+  });
+  it("shows the save error when failing to save an appointment", async () => {
+    axios.put.mockRejectedValueOnce();
+    // 1. Render the Application.
+    const { container, debug } = render(<Application />);
+
+    // 2. Wait until the text "Archie Cohen" is displayed.
+    await waitForElement(() => getByText(container, "Archie Cohen"));
+
+    // 3. Click the "Add" button on the first empty appointment.
+    const appointments = getAllByTestId(container, "appointment");
+    const appointment = appointments[0];
+    fireEvent.click(getByAltText(appointment, "Add"));
+
+    // 4. Enter the name "Lydia Miller-Jones" into the input with the placeholder "Enter Student Name".
+    fireEvent.change(getByPlaceholderText(appointment, /enter student name/i), {
+      target: { value: "Lydia Miller-Jones" },
+    });
+
+    // 5. Click the first interviewer in the list.
+    fireEvent.click(getByAltText(appointment, "Sylvia Palmer"));
+
+    // 6. Click the "Save" button on that same appointment.
+    fireEvent.click(getByText(appointment, "Save"));
+
+    // 7. Check that the element with the text "Saving" is displayed.
+    expect(getByText(appointment, /Saving.../i)).toBeInTheDocument();
+
+    // 8. Wait until the element with the text "Saving" has disappeared.
+    await waitForElementToBeRemoved(() => getByText(appointment, /Saving.../i));
+
+    // 9. Check that the error message saying "Could not save appointment."
+    expect(
+      getByText(appointment, /Could not save appointment./i)
+    ).toBeInTheDocument();
+
+    // 10. Click on the "close" icon.
+    fireEvent.click(getByAltText(appointment, "Close"));
+
+    // 11. Check that the Form is displayed, with an empty input field."
+    expect(getByDisplayValue(appointment, "")).toBeInTheDocument();
+
+    // 12. Click on the cancel button.
+    fireEvent.click(getByText(appointment, "Cancel"));
+
+    //13 . Check that the add icon is displayed and we are back to step 3.
+    expect(getByAltText(appointment, "Add")).toBeInTheDocument();
+  });
+
+  it("shows the delete error when failing to delete an appointment", async () => {
+    axios.put.mockRejectedValueOnce();
+    // 1. Render the Application.
+    const { container, debug } = render(<Application />);
+    act(async () => {
+      // 2. Wait until the text "Archie Cohen" is displayed.
+      await waitForElement(() => getByText(container, "Archie Cohen"));
+
+      // 3. Click the "Trash" button on the existing interview.
+      const appointment = getAllByTestId(
+        container,
+        "appointment"
+      ).find((appointment) => queryByText(appointment, "Archie Cohen"));
+
+      fireEvent.click(getByAltText(appointment, "Delete"));
+
+      // 4. Check that the confirm message is displayed."
+      expect(
+        getByText(appointment, /Are you sure you would like to delete?/i)
+      ).toBeInTheDocument();
+
+      // 5. Click the confirm button.
+      fireEvent.click(getByText(appointment, "Confirm"));
+
+      // 6. Check that the element with the text "Deleting" is displayed.
+      expect(getByText(appointment, /Deleting.../i)).toBeInTheDocument();
+
+      // 8. Wait until the element with the text "Deleting" has disappeared.
+      await waitForElementToBeRemoved(() =>
+        getByText(appointment, /Deleting.../i)
+      );
+
+      // 9. Check that the error message saying "Could not delete appointment."
+      expect(
+        getByText(appointment, /Could not delete appointment./i)
+      ).toBeInTheDocument();
+
+      // 10. Click on the "close" icon.
+      fireEvent.click(getByAltText(appointment, "Close"));
+
+      // 11. Check that we went back to step 2.
+      expect(getByText(appointment, "Archie Cohen")).toBeInTheDocument();
+    });
   });
 });

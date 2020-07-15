@@ -20,7 +20,7 @@ export default function useApplicationData() {
     }
   };
 
-  function bookInterview(id, interview) {
+  function bookInterview(id, interview, isEdit) {
     const appointment = {
       ...state.appointments[id],
       interview: { ...interview },
@@ -29,8 +29,9 @@ export default function useApplicationData() {
       ...state.appointments,
       [id]: appointment,
     };
-    spotsRemaining(id, -1);
-
+    if (!isEdit) {
+      spotsRemaining(id, -1);
+    }
     return Promise.resolve(
       axios.put(`/api/appointments/${id}`, appointment)
     ).then(() => {
@@ -47,6 +48,7 @@ export default function useApplicationData() {
       ...state.appointments,
       [id]: appointment,
     };
+
     spotsRemaining(id, +1);
 
     return Promise.resolve(
