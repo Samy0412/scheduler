@@ -12,15 +12,18 @@ export default function useApplicationData() {
     interviewers: {},
   });
 
-  const spotsRemaining = (id, increaseBy) => {
-    for (let day of state.days) {
-      if (day.appointments.includes(id)) {
-        day.spots += increaseBy;
+  const spotsRemaining = (day, appointments) => {
+    let appointmentArr = day.appointments;
+    let available = 0;
+    for (const id of appointmentArr) {
+      if (appointments[id].interview === null) {
+        available++;
       }
     }
+    return available;
   };
 
-  function bookInterview(id, interview, isEdit) {
+  function bookInterview(id, interview) {
     const appointment = {
       ...state.appointments[id],
       interview: { ...interview },
@@ -29,13 +32,15 @@ export default function useApplicationData() {
       ...state.appointments,
       [id]: appointment,
     };
-    if (!isEdit) {
-      spotsRemaining(id, -1);
-    }
+
+    const days = state.days.map((day) => ({
+      ...day,
+      spots: spotsRemaining(day, appointments),
+    }));
     return Promise.resolve(
       axios.put(`/api/appointments/${id}`, appointment)
     ).then(() => {
-      setState({ ...state, appointments });
+      setState({ ...state, appointments, days });
     });
   }
 
@@ -49,12 +54,15 @@ export default function useApplicationData() {
       [id]: appointment,
     };
 
-    spotsRemaining(id, +1);
+    const days = state.days.map((day) => ({
+      ...day,
+      spots: spotsRemaining(day, appointments),
+    }));
 
     return Promise.resolve(
       axios.delete(`/api/appointments/${id}`, appointment)
     ).then(() => {
-      setState({ ...state, appointments });
+      setState({ ...state, appointments, days });
     });
   }
 

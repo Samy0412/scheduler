@@ -3,24 +3,26 @@ import "components/DayListItem.scss";
 var classnames = require("classnames");
 
 export default function DayListItem(props) {
+  //Add the appropriate class depending on the props
   let dayClass = classnames({
     "day-list__item": true,
     "day-list__item--selected": props.selected,
     "day-list__item--full": !props.spots,
   });
-
-  const formatSpots = () => {
-    if (props.spots === 0) {
+  //Format spots depending on the number of spots available
+  const formatSpots = (spots) => {
+    if (spots === 0) {
       return "no spots";
-    } else if (props.spots === 1) {
+    } else if (spots === 1) {
       return "1 spot";
     }
-    return `${props.spots} spots`;
+    return `${spots} spots`;
   };
+
   return (
     <li className={dayClass} onClick={props.setDay} data-testid="day">
       <h2 className="text--regular">{props.name}</h2>
-      <h3 className="text--light">{formatSpots()} remaining</h3>
+      <h3 className="text--light">{formatSpots(props.spots)} remaining</h3>
     </li>
   );
 }

@@ -4,11 +4,14 @@ import "components/Application.scss";
 //imports needed components
 import DayList from "components/DayList";
 import Appointment from "components/Appointment";
+
+//Imports all the helper functions
 import {
   getAppointmentsForDay,
   getInterview,
   getInterviewersForDay,
 } from "helpers/selectors";
+
 //Imports custom hook that manages the state
 import useApplicationData from "hooks/useApplicationData";
 

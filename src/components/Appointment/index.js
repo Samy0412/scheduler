@@ -19,29 +19,27 @@ const ERROR_SAVE = "ERROR_SAVE";
 const ERROR_DELETE = "ERROR_DELETE";
 
 export default function Appointment(props) {
+  //Import the functions from useVisualMode file and sets the initial mode depending on if an interview exists or not
   const { mode, transition, back } = useVisualMode(
     props.interview ? SHOW : EMPTY
   );
-
+  //Save the interview and transition to Saving mode, then Show or error mode
   function save(name, interviewer) {
-    let isEdit = false;
-    if (props.interview) {
-      isEdit = true;
-    }
     const interview = {
       student: name,
       interviewer,
     };
     transition(SAVING);
     props
-      .bookInterview(props.id, interview, isEdit)
+      .bookInterview(props.id, interview)
       .then(() => transition(SHOW))
       .catch((error) => transition(ERROR_SAVE, true));
   }
-
+  //Deleteinterview transition firt to confirm mode
   function deleteInterview() {
     transition(CONFIRM);
   }
+  //ConfirmDeletion actually deletes the interview and transition to deleting mode, then empty or error mode
   function confirmDeletion() {
     transition(DELETING, true);
     props
@@ -49,7 +47,7 @@ export default function Appointment(props) {
       .then(() => transition(EMPTY))
       .catch((error) => transition(ERROR_DELETE, true));
   }
-
+  //Edit goes back to create mode
   function edit() {
     transition(CREATE);
   }
@@ -65,12 +63,13 @@ export default function Appointment(props) {
         />
       )}
       {mode === EMPTY && <Empty onAdd={() => transition(CREATE)} />}
+
       {mode === CREATE &&
         (!props.interview ? (
           <Form
             interviewers={props.interviewers}
             onSave={save}
-            onCancel={() => back()}
+            onCancel={back}
           />
         ) : (
           <Form
@@ -78,7 +77,7 @@ export default function Appointment(props) {
             interviewers={props.interviewers}
             interviewer={props.interview.interviewer.id}
             onSave={save}
-            onCancel={() => back()}
+            onCancel={back}
           />
         ))}
       {mode === SAVING && <Status message="Saving..." />}
@@ -86,7 +85,7 @@ export default function Appointment(props) {
       {mode === CONFIRM && (
         <Confirm
           message="Are you sure you would like to delete?"
-          onCancel={() => back()}
+          onCancel={back}
           onConfirm={confirmDeletion}
         />
       )}

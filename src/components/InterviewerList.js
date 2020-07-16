@@ -23,6 +23,7 @@ export default function InterviewerList(props) {
     </section>
   );
 }
+
 InterviewerList.propTypes = {
   value: PropTypes.number,
   onChange: PropTypes.func.isRequired,
