@@ -1,16 +1,54 @@
-import { useState, useEffect } from "react";
+import { useReducer, useEffect } from "react";
 //Axios allows to make server resquests like $Ajax in Jquery
 import axios from "axios";
 //import { getAppointmentsForDay } from "helpers/selectors";
 
 export default function useApplicationData() {
-  //Hook to store the state and update it
-  const [state, setState] = useState({
+  const [state, dispatch] = useReducer(reducer, {
     day: "Monday",
     days: [],
     appointments: {},
     interviewers: {},
   });
+  //Constants to define the three different actions
+  const SET_DAY = "SET_DAY";
+  const SET_APPLICATION_DATA = "SET_APPLICATION_DATA";
+  const SET_INTERVIEW = "SET_INTERVIEW";
+  //reducer function
+  function reducer(state, action) {
+    switch (action.type) {
+      case "SET_DAY":
+        return {
+          ...state,
+          day: action.day,
+        };
+      case "SET_APPLICATION_DATA":
+        return {
+          ...state,
+          days: action.days,
+          appointments: action.appointments,
+          interviewers: action.interviewers,
+        };
+      case "SET_INTERVIEW": {
+        return {
+          ...state,
+          days: action.days,
+          appointments: action.appointments,
+        };
+      }
+      default:
+        throw new Error(
+          `Tried to reduce with unsupported action type: ${action.type}`
+        );
+    }
+  }
+  // // Hook to store the state and update it
+  // const [state, setState] = useState({
+  //   day: "Monday",
+  //   days: [],
+  //   appointments: {},
+  //   interviewers: {},
+  // });
 
   const spotsRemaining = (day, appointments) => {
     let appointmentArr = day.appointments;
@@ -39,9 +77,7 @@ export default function useApplicationData() {
     }));
     return Promise.resolve(
       axios.put(`/api/appointments/${id}`, appointment)
-    ).then(() => {
-      setState({ ...state, appointments, days });
-    });
+    ).then(dispatch({ type: SET_INTERVIEW, appointments, days }));
   }
 
   function deleteInterview(id) {
@@ -61,13 +97,12 @@ export default function useApplicationData() {
 
     return Promise.resolve(
       axios.delete(`/api/appointments/${id}`, appointment)
-    ).then(() => {
-      setState({ ...state, appointments, days });
-    });
+    ).then(dispatch({ type: SET_INTERVIEW, appointments, days }));
   }
 
   //Function to update the state of the day
-  const setDay = (day) => setState({ ...state, day });
+  const setDay = (day) => dispatch({ type: SET_DAY, day });
+
   //Hook enclosing the API requests to be called after painting the DOM
   useEffect(() => {
     Promise.all([
@@ -76,15 +111,18 @@ export default function useApplicationData() {
       axios.get(`/api/interviewers`),
     ])
       .then((all) => {
+        const days = all[0].data;
+        const appointments = all[1].data;
+        const interviewers = all[2].data;
         //Updating the state of of the days, appointments and interviewers
-        setState((prev) => ({
-          //...prev" makes sure it it the current version og the state that is copied, not the version of the state at the time of the call
-          ...prev,
-          days: all[0].data,
-          appointments: all[1].data,
-          interviewers: all[2].data,
-        }));
+        dispatch({
+          type: SET_APPLICATION_DATA,
+          days,
+          appointments,
+          interviewers,
+        });
       })
+
       .catch((err) => console.log(err));
   }, []);
   return {
