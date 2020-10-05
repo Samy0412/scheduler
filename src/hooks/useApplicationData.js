@@ -1,6 +1,7 @@
 import { useReducer, useEffect } from "react";
 //Axios allows to make server resquests like $Ajax in Jquery
 import axios from "axios";
+import { action } from "@storybook/addon-actions";
 //import { getAppointmentsForDay } from "helpers/selectors";
 
 export default function useApplicationData() {
@@ -14,6 +15,7 @@ export default function useApplicationData() {
   const SET_DAY = "SET_DAY";
   const SET_APPLICATION_DATA = "SET_APPLICATION_DATA";
   const SET_INTERVIEW = "SET_INTERVIEW";
+
   //reducer function
   function reducer(state, action) {
     switch (action.type) {
@@ -29,26 +31,25 @@ export default function useApplicationData() {
           appointments: action.appointments,
           interviewers: action.interviewers,
         };
-      case "SET_INTERVIEW": {
+      case "SET_INTERVIEW":
         return {
           ...state,
+          appointments: {
+            ...state.appointments,
+            [action.id]: {
+              ...state.appointments[action.id],
+              interview: { ...action.interview },
+            },
+          },
           days: action.days,
-          appointments: action.appointments,
         };
-      }
+
       default:
         throw new Error(
           `Tried to reduce with unsupported action type: ${action.type}`
         );
     }
   }
-  // // Hook to store the state and update it
-  // const [state, setState] = useState({
-  //   day: "Monday",
-  //   days: [],
-  //   appointments: {},
-  //   interviewers: {},
-  // });
 
   const spotsRemaining = (day, appointments) => {
     let appointmentArr = day.appointments;
@@ -75,9 +76,17 @@ export default function useApplicationData() {
       ...day,
       spots: spotsRemaining(day, appointments),
     }));
+
     return Promise.resolve(
       axios.put(`/api/appointments/${id}`, appointment)
-    ).then(dispatch({ type: SET_INTERVIEW, appointments, days }));
+    ).then(
+      dispatch({
+        type: SET_INTERVIEW,
+        id,
+        interview,
+        days: days,
+      })
+    );
   }
 
   function deleteInterview(id) {
@@ -97,7 +106,7 @@ export default function useApplicationData() {
 
     return Promise.resolve(
       axios.delete(`/api/appointments/${id}`, appointment)
-    ).then(dispatch({ type: SET_INTERVIEW, appointments, days }));
+    ).then(dispatch({ type: SET_INTERVIEW, id, interview: null, days: days }));
   }
 
   //Function to update the state of the day
