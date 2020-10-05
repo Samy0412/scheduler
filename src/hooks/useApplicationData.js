@@ -34,13 +34,7 @@ export default function useApplicationData() {
       case "SET_INTERVIEW":
         return {
           ...state,
-          appointments: {
-            ...state.appointments,
-            [action.id]: {
-              ...state.appointments[action.id],
-              interview: { ...action.interview },
-            },
-          },
+          appointments: action.appointments,
           days: action.days,
         };
 
@@ -59,6 +53,7 @@ export default function useApplicationData() {
         available++;
       }
     }
+
     return available;
   };
 
@@ -82,8 +77,7 @@ export default function useApplicationData() {
     ).then(
       dispatch({
         type: SET_INTERVIEW,
-        id,
-        interview,
+        appointments,
         days: days,
       })
     );
@@ -106,7 +100,7 @@ export default function useApplicationData() {
 
     return Promise.resolve(
       axios.delete(`/api/appointments/${id}`, appointment)
-    ).then(dispatch({ type: SET_INTERVIEW, id, interview: null, days: days }));
+    ).then(dispatch({ type: SET_INTERVIEW, appointments, days: days }));
   }
 
   //Function to update the state of the day
