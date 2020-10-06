@@ -1,4 +1,5 @@
 import React from "react";
+import { useEffect } from "react";
 import "components/Appointment/styles.scss";
 import Header from "components/Appointment/Header";
 import Empty from "components/Appointment/Empty";
@@ -23,6 +24,7 @@ export default function Appointment(props) {
   const { mode, transition, back } = useVisualMode(
     props.interview ? SHOW : EMPTY
   );
+
   //Save the interview and transition to Saving mode, then Show or error mode
   function save(name, interviewer) {
     const interview = {
@@ -35,10 +37,7 @@ export default function Appointment(props) {
       .then(() => transition(SHOW))
       .catch((error) => transition(ERROR_SAVE, true));
   }
-  //Deleteinterview transition firt to confirm mode
-  function deleteInterview() {
-    transition(CONFIRM);
-  }
+
   //ConfirmDeletion actually deletes the interview and transition to deleting mode, then empty or error mode
   function confirmDeletion() {
     transition(DELETING, true);
@@ -47,19 +46,16 @@ export default function Appointment(props) {
       .then(() => transition(EMPTY))
       .catch((error) => transition(ERROR_DELETE, true));
   }
-  //Edit goes back to create mode
-  function edit() {
-    transition(CREATE);
-  }
+
   return (
     <article data-testid="appointment" className="appointment">
       <Header time={props.time} />
-      {mode === SHOW && (
+      {mode === SHOW && props.interview && (
         <Show
           student={props.interview.student}
           interviewer={props.interview.interviewer}
-          onDelete={deleteInterview}
-          onEdit={edit}
+          onDelete={() => transition(CONFIRM)}
+          onEdit={() => transition(CREATE)}
         />
       )}
       {mode === EMPTY && <Empty onAdd={() => transition(CREATE)} />}

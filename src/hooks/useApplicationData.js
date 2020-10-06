@@ -15,6 +15,7 @@ export default function useApplicationData() {
   const SET_DAY = "SET_DAY";
   const SET_APPLICATION_DATA = "SET_APPLICATION_DATA";
   const SET_INTERVIEW = "SET_INTERVIEW";
+  const SET_SPOTS_REMAINING = "SET_SPOTS_REMAINING";
 
   //reducer function
   function reducer(state, action) {
@@ -32,9 +33,21 @@ export default function useApplicationData() {
           interviewers: action.interviewers,
         };
       case "SET_INTERVIEW":
+        const appointment = {
+          ...state.appointments[action.id],
+          interview: { ...action.interview },
+        };
+        const appointments = {
+          ...state.appointments,
+          [action.id]: appointment,
+        };
         return {
           ...state,
-          appointments: action.appointments,
+          appointments: appointments,
+        };
+      case "SET_SPOTS_REMAINING":
+        return {
+          ...state,
           days: action.days,
         };
 
@@ -53,7 +66,6 @@ export default function useApplicationData() {
         available++;
       }
     }
-
     return available;
   };
 
@@ -72,15 +84,15 @@ export default function useApplicationData() {
       spots: spotsRemaining(day, appointments),
     }));
 
-    return Promise.resolve(
-      axios.put(`/api/appointments/${id}`, appointment)
-    ).then(
-      dispatch({
-        type: SET_INTERVIEW,
-        appointments,
-        days: days,
-      })
-    );
+    return Promise.resolve(axios.put(`/api/appointments/${id}`, appointment))
+      .then(
+        dispatch({
+          type: SET_INTERVIEW,
+          id,
+          interview,
+        })
+      )
+      .then(dispatch({ type: SET_SPOTS_REMAINING, days }));
   }
 
   function deleteInterview(id) {
@@ -98,9 +110,9 @@ export default function useApplicationData() {
       spots: spotsRemaining(day, appointments),
     }));
 
-    return Promise.resolve(
-      axios.delete(`/api/appointments/${id}`, appointment)
-    ).then(dispatch({ type: SET_INTERVIEW, appointments, days: days }));
+    return Promise.resolve(axios.delete(`/api/appointments/${id}`, appointment))
+      .then(dispatch({ type: SET_INTERVIEW, id, interview: null }))
+      .then(dispatch({ type: SET_SPOTS_REMAINING, days }));
   }
 
   //Function to update the state of the day
@@ -108,6 +120,19 @@ export default function useApplicationData() {
 
   //Hook enclosing the API requests to be called after painting the DOM
   useEffect(() => {
+    var webSocket = new WebSocket(process.env.REACT_APP_WEBSOCKET_URL);
+    webSocket.onopen = function (event) {
+      webSocket.send("ping");
+    };
+    webSocket.onmessage = function (event) {
+      console.log(`Message Received: ${event.data}`);
+      const msg = JSON.parse(event.data);
+      console.log("message sent in JSON:", msg);
+      if (msg.type === "SET_INTERVIEW") {
+        console.log("oh an interview has been booked!");
+        dispatch(msg);
+      }
+    };
     Promise.all([
       axios.get(`/api/days`),
       axios.get(`/api/appointments`),
@@ -125,9 +150,9 @@ export default function useApplicationData() {
           interviewers,
         });
       })
-
       .catch((err) => console.log(err));
   }, []);
+
   return {
     state,
     setDay,
