@@ -30,7 +30,7 @@ describe("Application", () => {
 
     fireEvent.click(getByText("Tuesday"));
 
-    expect(getByText("Leopold Silvers")).toBeInTheDocument();
+    expect(getByText("Samantha gadet")).toBeInTheDocument();
   });
 
   it("loads data, edits an interview and keeps the spots remaining for Monday the same", async () => {
