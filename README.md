@@ -15,7 +15,7 @@ You can also view and use the app directly here: https://interview-scheduler-sg.
 PORT=8000
 CHOKIDAR_USEPOLLING=false
 ```
-4. Create the `.env.development` file and insert in it:
+4. Create the `.env` file and insert in it:
 ```
 SKIP_PREFLIGHT_CHECK=true
 ```
