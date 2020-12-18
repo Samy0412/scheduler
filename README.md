@@ -2,9 +2,9 @@
 
 React tested application that allows users to book and cancel interviews. 
 
-This is the client side of the application, you also need to fork and clone the server-side : scheduler-api, for this application to work.
+You can view and use the app directly here: https://interview-scheduler-sg.netlify.app
 
-You can also view and use the app directly here: https://interview-scheduler-sg.netlify.app
+if you want to use it on your local computer, additionally to this repository, you also also need to fork and clone the server-side : scheduler-api, for this application to work.
 
 ## Setup
 
