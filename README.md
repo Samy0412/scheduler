@@ -24,11 +24,18 @@ SKIP_PREFLIGHT_CHECK=true
 
 ## Final product
 
+Main page of the app: 
 
 !["Appointments"](https://github.com/Samy0412/scheduler/blob/master/public/images/Appointments.png?raw=true)
 
+This is the form to create a new appointment:
+
 !["Form"](https://github.com/Samy0412/scheduler/blob/master/public/images/Form.png?raw=true)
-The user is asked to confirm his choice.
+
+The user is asked to confirm his choice:
+
 !["Confirm"](https://github.com/Samy0412/scheduler/blob/master/public/images/Confirm.png?raw=true)
-Friendly error message are displayed.
+
+Friendly error message can be displayed:
+
 !["Error"](https://github.com/Samy0412/scheduler/blob/master/public/images/Error.png?raw=true)
